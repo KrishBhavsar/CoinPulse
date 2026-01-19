@@ -67,7 +67,7 @@ const CandlestickChart = ({
     });
 
     const series = chart.addSeries(CandlestickSeries, getCandlestickConfig());
-     const convertedToSeconds = ohlcData.map(
+    const convertedToSeconds = ohlcData.map(
       (item) =>
         [
           Math.floor(item[0] / 1000),
@@ -78,7 +78,7 @@ const CandlestickChart = ({
         ] as OHLCData
     );
 
-    series.setData(convertOHLCData(convertedToSeconds  ));
+    series.setData(convertOHLCData(convertedToSeconds));
     chart.timeScale().fitContent();
     chartRef.current = chart;
     candleSeriesRef.current = series;
@@ -95,7 +95,7 @@ const CandlestickChart = ({
       chartRef.current = null;
       candleSeriesRef.current = null;
     };
-  }, [height , period ]);
+  }, [height, period]);
 
   useEffect(() => {
     if (!candleSeriesRef.current) return;
@@ -111,9 +111,9 @@ const CandlestickChart = ({
         ] as OHLCData
     );
 
-    const converted = convertOHLCData(convertedToSeconds); 
-    candleSeriesRef.current.setData(converted);  
-    chartRef.current?.timeScale().fitContent();  
+    const converted = convertOHLCData(convertedToSeconds);
+    candleSeriesRef.current.setData(converted);
+    chartRef.current?.timeScale().fitContent();
   }, [ohlcData, period]);
   return (
     <div id="candlestick-chart">
@@ -134,7 +134,7 @@ const CandlestickChart = ({
               onClick={() => handlePeriodChange(value)}
             >
               {label}
-            </button> 
+            </button>
           ))}
         </div>
       </div>
