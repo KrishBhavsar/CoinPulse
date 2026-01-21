@@ -6,7 +6,6 @@ import {
   getChartConfig,
   LIVE_INTERVAL_BUTTONS,
   PERIOD_BUTTONS,
-  PERIOD_CONFIG,
 } from "@/constants";
 import {
   CandlestickSeries,
@@ -15,19 +14,22 @@ import {
   ISeriesApi,
   UTCTimestamp,
 } from "lightweight-charts";
-import { fetcher } from "@/lib/coingecko.actions";
+import { fetchBinanceKlines } from "@/lib/binance.actions";
+import { fetchCoinGeckoOHLC } from "@/lib/coingecko.actions";
 import { convertOHLCData } from "@/lib/utils";
 
 const CandlestickChart = ({
   children,
   data,
   coinId,
+  symbol,
   height = 360,
   initialPeriod = "daily",
   liveOhlcv = null,
   mode = "historical",
   liveInterval,
   setLiveInterval,
+  useBinance = true,
 }: CandlestickChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -40,13 +42,13 @@ const CandlestickChart = ({
 
   const fetchOHLCData = async (selectedPeriod: Period) => {
     try {
-      const { days } = PERIOD_CONFIG[selectedPeriod];
+      let newData: OHLCData[];
 
-      const newData = await fetcher<OHLCData[]>(`/coins/${coinId}/ohlc`, {
-        vs_currency: "usd",
-        days,
-        precision: "full",
-      });
+      if (useBinance && symbol) {
+        newData = await fetchBinanceKlines(symbol, selectedPeriod);
+      } else {
+        newData = await fetchCoinGeckoOHLC(coinId, selectedPeriod);
+      }
 
       startTransition(() => {
         setOhlcData(newData ?? []);
@@ -75,18 +77,8 @@ const CandlestickChart = ({
     });
     const series = chart.addSeries(CandlestickSeries, getCandlestickConfig());
 
-    const convertedToSeconds = ohlcData.map(
-      (item) =>
-        [
-          Math.floor(item[0] / 1000),
-          item[1],
-          item[2],
-          item[3],
-          item[4],
-        ] as OHLCData
-    );
-
-    series.setData(convertOHLCData(convertedToSeconds));
+    // Binance data is already in seconds, no conversion needed
+    series.setData(convertOHLCData(ohlcData));
     chart.timeScale().fitContent();
 
     chartRef.current = chart;
@@ -110,19 +102,8 @@ const CandlestickChart = ({
   useEffect(() => {
     if (!candleSeriesRef.current) return;
 
-    const convertedToSeconds = ohlcData.map(
-      (item) =>
-        [
-          Math.floor(item[0] / 1000),
-          item[1],
-          item[2],
-          item[3],
-          item[4],
-        ] as OHLCData
-    );
-
-    const converted = convertOHLCData(convertedToSeconds);
-    candleSeriesRef.current.setData(converted);
+    // Binance data is already in seconds, no conversion needed
+    candleSeriesRef.current.setData(convertOHLCData(ohlcData));
 
     const dataChanged = prevOhlcDataLength.current !== ohlcData.length;
 

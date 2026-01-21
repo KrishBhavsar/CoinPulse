@@ -43,6 +43,57 @@ export async function fetcher<T>(
   return response.json();
 }
 
+// Fetch coin list with images (cached heavily since it rarely changes)
+export async function getCoinList(): Promise<
+  { id: string; symbol: string; name: string; image: string }[]
+> {
+  return fetcher<{ id: string; symbol: string; name: string; image: string }[]>(
+    "/coins/markets",
+    { vs_currency: "usd", per_page: 250, page: 1 },
+    3600 // Cache for 1 hour
+  );
+}
+
+// Map period to CoinGecko days parameter
+const PERIOD_TO_DAYS: Record<Period, number | "max"> = {
+  daily: 1,
+  weekly: 7,
+  monthly: 30,
+  "3months": 90,
+  "6months": 180,
+  yearly: 365,
+  max: "max",
+};
+
+// Fetch OHLC data from CoinGecko (fallback when Binance doesn't have the symbol)
+export async function fetchCoinGeckoOHLC(
+  coinId: string,
+  period: Period
+): Promise<OHLCData[]> {
+  const days = PERIOD_TO_DAYS[period];
+
+  try {
+    // CoinGecko OHLC endpoint returns [timestamp_ms, open, high, low, close]
+    const ohlcData = await fetcher<number[][]>(
+      `/coins/${coinId}/ohlc`,
+      { vs_currency: "usd", days },
+      60
+    );
+
+    // Convert timestamp from ms to seconds to match our OHLCData format
+    return ohlcData.map(([timestamp, open, high, low, close]) => [
+      Math.floor(timestamp / 1000),
+      open,
+      high,
+      low,
+      close,
+    ]);
+  } catch (error) {
+    console.error(`CoinGecko OHLC Error for ${coinId}:`, error);
+    return [];
+  }
+}
+
 export async function getPools(
   id: string,
   network?: string | null,

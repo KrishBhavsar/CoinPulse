@@ -1,4 +1,5 @@
-import { fetcher, getPools } from "@/lib/coingecko.actions";
+import { fetcher, fetchCoinGeckoOHLC, getPools } from "@/lib/coingecko.actions";
+import { fetchBinanceKlines } from "@/lib/binance.actions";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -8,21 +9,24 @@ import Converter from "@/components/Converter";
 const Page = async ({ params }: NextPageProps) => {
   const { id } = await params;
 
-  const [coinData, coinOHLCData] = await Promise.all([
-    fetcher<CoinDetailsData>(`/coins/${id}`, {
-      dex_pair_format: "contract_address",
-    }),
-    fetcher<OHLCData[]>(`/coins/${id}/ohlc`, {
-      vs_currency: "usd",
-      days: 1,
-      precision: "full",
-    }),
-  ]);
+  const coinData = await fetcher<CoinDetailsData>(`/coins/${id}`, {
+    dex_pair_format: "contract_address",
+  });
+
+  // Fetch initial OHLC data from Binance, fallback to CoinGecko if not available
+  const binanceSymbol = `${coinData.symbol.toUpperCase()}USDT`;
+  let coinOHLCData = await fetchBinanceKlines(binanceSymbol, "daily");
+
+  // If Binance doesn't have this symbol, use CoinGecko as fallback
+  const useBinance = coinOHLCData.length > 0;
+  if (!useBinance) {
+    coinOHLCData = await fetchCoinGeckoOHLC(id, "daily");
+  }
 
   const platform = coinData.asset_platform_id
     ? coinData.detail_platforms?.[coinData.asset_platform_id]
     : null;
-  const network = platform?.geckoterminal_url.split("/")[3] || null;
+  const network = platform?.geckoterminal_url?.split("/")[3] || null;
   const contractAddress = platform?.contract_address || null;
 
   const pool = await getPools(id, network, contractAddress);
@@ -68,6 +72,7 @@ const Page = async ({ params }: NextPageProps) => {
           poolId={pool.id}
           coin={coinData}
           coinOHLCData={coinOHLCData}
+          useBinance={useBinance}
         >
           <h4>Exchange Listings</h4>
         </LiveDataWrapper>

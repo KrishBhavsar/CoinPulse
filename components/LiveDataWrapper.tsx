@@ -13,6 +13,7 @@ const LiveDataWrapper = ({
   poolId,
   coin,
   coinOHLCData,
+  useBinance = true,
 }: LiveDataProps) => {
   // Use coin symbol (e.g., "btc", "sol") instead of coinId (e.g., "bitcoin", "solana")
   const binanceSymbol = `${coin.symbol.toLowerCase()}usdt`;
@@ -77,10 +78,12 @@ const LiveDataWrapper = ({
       <div className="trend">
         <CandlestickChart
           coinId={coinId}
+          symbol={`${coin.symbol.toUpperCase()}USDT`}
           data={coinOHLCData}
-          liveOhlcv={ohlcv}
-          mode="live"
+          liveOhlcv={useBinance ? ohlcv : null}
+          mode={useBinance ? "live" : "historical"}
           initialPeriod="daily"
+          useBinance={useBinance}
         >
           <h4>Trend Overview</h4>
         </CandlestickChart>

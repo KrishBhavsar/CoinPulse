@@ -1,4 +1,5 @@
 import { fetcher } from "@/lib/coingecko.actions";
+import { fetchBinanceKlines } from "@/lib/binance.actions";
 import { CoinOverviewFallback } from "./fallback";
 import LiveCoinOverview from "./LiveCoinOverview";
 
@@ -8,11 +9,7 @@ const CoinOverview = async () => {
       fetcher<CoinDetailsData>("/coins/bitcoin", {
         dex_pair_format: "symbol",
       }),
-      fetcher<OHLCData[]>("/coins/bitcoin/ohlc", {
-        vs_currency: "usd",
-        days: 1,
-        precision: "full",
-      }),
+      fetchBinanceKlines("BTCUSDT", "daily"),
     ]);
 
     return <LiveCoinOverview coin={coin} coinOHLCData={coinOHLCData} />;

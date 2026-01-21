@@ -9,12 +9,14 @@ interface CandlestickChartProps {
   data?: OHLCData[];
   liveOhlcv?: OHLCData | null;
   coinId: string;
+  symbol?: string; // Binance symbol e.g., "BTCUSDT"
   height?: number;
   children?: React.ReactNode;
   mode?: "historical" | "live";
   initialPeriod?: Period;
   liveInterval?: "1s" | "1m";
   setLiveInterval?: (interval: "1s" | "1m") => void;
+  useBinance?: boolean; // Whether to use Binance or CoinGecko for period data
 }
 
 interface ConverterProps {
@@ -234,6 +236,7 @@ interface LiveDataProps {
   poolId: string;
   coin: CoinDetailsData;
   coinOHLCData?: OHLCData[];
+  useBinance?: boolean;
   children?: React.ReactNode;
 }
 

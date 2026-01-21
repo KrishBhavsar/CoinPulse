@@ -23,6 +23,7 @@ const LiveCoinOverview = ({ coin, coinOHLCData }: LiveCoinOverviewProps) => {
       <CandlestickChart
         data={coinOHLCData}
         coinId="bitcoin"
+        symbol="BTCUSDT"
         liveOhlcv={ohlcv}
         mode="live"
         initialPeriod="daily"
