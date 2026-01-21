@@ -17,7 +17,7 @@ export function formatCurrency(
   }
 
   if (showSymbol === undefined || showSymbol === true) {
-    return value.toLocaleString(undefined, {
+    return value.toLocaleString("en-US", {
       style: "currency",
       currency: currency?.toUpperCase() || "USD",
       minimumFractionDigits: digits ?? 2,
