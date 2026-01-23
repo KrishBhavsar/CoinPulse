@@ -6,31 +6,44 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import DataTable from "@/components/DataTable";
 import { TrendingCoinsFallback } from "./fallback";
 
+const HARDCODED_COINS = ["ethereum", "solana", "binancecoin", "ripple", "sui", "dogecoin"];
+
+type MarketCoin = {
+  id: string;
+  name: string;
+  image: string;
+  current_price: number;
+  price_change_percentage_24h: number;
+};
+
 const TrendingCoins = async () => {
-  let trendingCoins;
+  let coins: MarketCoin[] = [];
 
   try {
-    trendingCoins = await fetcher<{ coins: TrendingCoin[] }>(
-      "/search/trending",
-      undefined,
+    coins = await fetcher<MarketCoin[]>(
+      "/coins/markets",
+      {
+        vs_currency: "usd",
+        ids: HARDCODED_COINS.join(","),
+      },
       300
     );
+    // Sort coins to match our hardcoded order
+    coins = HARDCODED_COINS.map(id => coins.find(c => c.id === id)).filter(Boolean) as MarketCoin[];
   } catch (error) {
-    console.error("Error fetching trending coins:", error);
+    console.error("Error fetching coins:", error);
     return <TrendingCoinsFallback />;
   }
 
-  const columns: DataTableColumn<TrendingCoin>[] = [
+  const columns: DataTableColumn<MarketCoin>[] = [
     {
       header: "Name",
       cellClassName: "name-cell",
       cell: (coin) => {
-        const item = coin.item;
-
         return (
-          <Link href={`/coins/${item.id}`}>
-            <Image src={item.large} alt={item.name} width={36} height={36} />
-            <p>{item.name}</p>
+          <Link href={`/coins/${coin.id}`}>
+            <Image src={coin.image} alt={coin.name} width={36} height={36} />
+            <p>{coin.name}</p>
           </Link>
         );
       },
@@ -39,8 +52,7 @@ const TrendingCoins = async () => {
       header: "24h Change",
       cellClassName: "change-cell",
       cell: (coin) => {
-        const item = coin.item;
-        const isTrendingUp = item.data.price_change_percentage_24h.usd > 0;
+        const isTrendingUp = coin.price_change_percentage_24h > 0;
 
         return (
           <div
@@ -50,7 +62,7 @@ const TrendingCoins = async () => {
             )}
           >
             <p className="flex items-center">
-              {formatPercentage(item.data.price_change_percentage_24h.usd)}
+              {formatPercentage(coin.price_change_percentage_24h)}
               {isTrendingUp ? (
                 <TrendingUp width={16} height={16} />
               ) : (
@@ -64,18 +76,18 @@ const TrendingCoins = async () => {
     {
       header: "Price",
       cellClassName: "price-cell",
-      cell: (coin) => formatCurrency(coin.item.data.price),
+      cell: (coin) => formatCurrency(coin.current_price),
     },
   ];
 
   return (
     <div id="trending-coins">
-      <h4>Trending Coins</h4>
+      <h4>Top Coins</h4>
 
       <DataTable
-        data={trendingCoins?.coins.slice(0, 6) || []}
+        data={coins}
         columns={columns}
-        rowKey={(coin) => coin.item.id}
+        rowKey={(coin) => coin.id}
         tableClassName="trending-coins-table"
         headerCellClassName="py-3!"
         bodyCellClassName="py-2!"
