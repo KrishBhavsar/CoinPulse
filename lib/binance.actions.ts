@@ -1,6 +1,6 @@
 "use server";
 
-const BINANCE_API_URL = "https://api.binance.com/api/v3";
+const BINANCE_API_URL = "https://api.binance.us/api/v3";
 
 // Binance 24hr ticker response
 interface Binance24hrTicker {
