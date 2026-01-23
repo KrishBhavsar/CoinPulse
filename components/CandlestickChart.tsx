@@ -67,7 +67,7 @@ const CandlestickChart = ({
 
   useEffect(() => {
     const container = chartContainerRef.current;
-    if (!container) return;
+    if (!container || !ohlcData || ohlcData.length === 0) return;
 
     const showTime = ["daily", "weekly", "monthly"].includes(period);
 
@@ -96,7 +96,7 @@ const CandlestickChart = ({
       chartRef.current = null;
       candleSeriesRef.current = null;
     };
-  }, [height, period]);
+  }, [height, period, ohlcData]);
 
   // Handle historical data changes
   useEffect(() => {
